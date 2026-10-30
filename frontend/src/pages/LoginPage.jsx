@@ -3,9 +3,10 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export const LoginPage = () => {
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isAdminLogin = location.pathname === '/admin/login';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,7 +23,12 @@ export const LoginPage = () => {
     try {
       const res = await login(email, password);
       if (res.success) {
-        if (redirectPath) {
+        if (isAdminLogin && res.user.role !== 'admin') {
+          logout();
+          setError('This account does not have administrator access.');
+        } else if (isAdminLogin) {
+          navigate('/admin');
+        } else if (redirectPath) {
           navigate(redirectPath);
         } else if (res.user.role === 'admin') {
           navigate('/admin');
@@ -41,7 +47,7 @@ export const LoginPage = () => {
     <div className="min-h-[85vh] bg-[#0e0e14] flex flex-col justify-center items-center px-4 py-12">
       <div className="w-full max-w-sm bg-[#161622] border border-[#26263a] rounded-xl p-8 shadow-xl">
         <h2 className="text-xl font-bold text-white text-center mb-6">
-          Login
+          {isAdminLogin ? 'Administrator Login' : 'Login'}
         </h2>
 
         {error && (
@@ -84,16 +90,33 @@ export const LoginPage = () => {
             disabled={loading}
             className="w-full mt-2 py-2.5 rounded bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold text-xs transition shadow-sm"
           >
-            {loading ? 'Logging in...' : 'Log In'}
+            {loading ? 'Logging in...' : isAdminLogin ? 'Admin Login' : 'Log In'}
           </button>
         </form>
 
-        <p className="text-center text-xs text-slate-400 mt-5">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-blue-400 hover:underline">
-            Register here
-          </Link>
-        </p>
+        {isAdminLogin ? (
+          <p className="text-center text-xs text-slate-400 mt-5">
+            Citizen?{' '}
+            <Link to="/login" className="text-blue-400 hover:underline">
+              Sign in here
+            </Link>
+          </p>
+        ) : (
+          <>
+            <p className="text-center text-xs text-slate-400 mt-5">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-blue-400 hover:underline">
+                Register here
+              </Link>
+            </p>
+            <p className="text-center text-xs text-slate-400 mt-3">
+              Administrator?{' '}
+              <Link to="/admin/login" className="text-blue-400 hover:underline">
+                Admin login
+              </Link>
+            </p>
+          </>
+        )}
 
       </div>
     </div>

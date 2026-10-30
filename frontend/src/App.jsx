@@ -26,6 +26,7 @@ export default function App() {
               <Route path="/schemes" element={<SchemeCataloguePage />} />
               <Route path="/schemes/:id" element={<SchemeDetailsPage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/admin/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
 
               {/* Protected Citizen Routes */}
