@@ -10,13 +10,7 @@ export const RegisterPage = () => {
     name: '',
     email: '',
     password: '',
-    phone: '',
-    address: '',
-    state: 'State',
-    district: 'District',
-    pincode: '',
-    occupation: 'Citizen',
-    socialCategory: 'General'
+    phone: ''
   });
 
   const [error, setError] = useState('');
@@ -73,7 +67,7 @@ export const RegisterPage = () => {
               value={formData.name}
               onChange={handleChange}
               placeholder="Enter full name"
-              className="w-full px-3 py-2.5 rounded bg-[#1b1b2a] border border-[#2f2f47] text-white focus:outline-none focus:border-purple-500 text-xs"
+              className="w-full px-3 py-2.5 rounded bg-[#1b1b2a] border border-[#2f2f47] text-white focus:outline-none focus:border-blue-500 text-xs"
             />
           </div>
 
@@ -88,7 +82,7 @@ export const RegisterPage = () => {
               value={formData.email}
               onChange={handleChange}
               placeholder="Enter email address"
-              className="w-full px-3 py-2.5 rounded bg-[#1b1b2a] border border-[#2f2f47] text-white focus:outline-none focus:border-purple-500 text-xs"
+              className="w-full px-3 py-2.5 rounded bg-[#1b1b2a] border border-[#2f2f47] text-white focus:outline-none focus:border-blue-500 text-xs"
             />
           </div>
 
@@ -103,7 +97,7 @@ export const RegisterPage = () => {
               value={formData.password}
               onChange={handleChange}
               placeholder="Enter password"
-              className="w-full px-3 py-2.5 rounded bg-[#1b1b2a] border border-[#2f2f47] text-white focus:outline-none focus:border-purple-500 text-xs"
+              className="w-full px-3 py-2.5 rounded bg-[#1b1b2a] border border-[#2f2f47] text-white focus:outline-none focus:border-blue-500 text-xs"
             />
           </div>
 
@@ -118,62 +112,14 @@ export const RegisterPage = () => {
               value={formData.phone}
               onChange={handleChange}
               placeholder="Enter phone number"
-              className="w-full px-3 py-2.5 rounded bg-[#1b1b2a] border border-[#2f2f47] text-white focus:outline-none focus:border-purple-500 text-xs"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-slate-300 mb-1 font-medium">
-                District
-              </label>
-              <input
-                type="text"
-                name="district"
-                value={formData.district}
-                onChange={handleChange}
-                placeholder="District"
-                className="w-full px-3 py-2.5 rounded bg-[#1b1b2a] border border-[#2f2f47] text-white focus:outline-none focus:border-purple-500 text-xs"
-              />
-            </div>
-            <div>
-              <label className="block text-slate-300 mb-1 font-medium">
-                Social Category
-              </label>
-              <select
-                name="socialCategory"
-                value={formData.socialCategory}
-                onChange={handleChange}
-                aria-label="Social Category"
-                className="w-full px-3 py-2.5 rounded bg-[#1b1b2a] border border-[#2f2f47] text-white focus:outline-none focus:border-purple-500 text-xs"
-              >
-                <option value="General">General</option>
-                <option value="OBC">OBC</option>
-                <option value="SC">SC</option>
-                <option value="ST">ST</option>
-                <option value="EWS">EWS</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-slate-300 mb-1 font-medium">
-              Address
-            </label>
-            <input
-              type="text"
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              placeholder="Residential address"
-              className="w-full px-3 py-2.5 rounded bg-[#1b1b2a] border border-[#2f2f47] text-white focus:outline-none focus:border-purple-500 text-xs"
+              className="w-full px-3 py-2.5 rounded bg-[#1b1b2a] border border-[#2f2f47] text-white focus:outline-none focus:border-blue-500 text-xs"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 py-2.5 rounded bg-[#a855f7] hover:bg-[#9333ea] text-white font-semibold text-xs transition shadow-sm"
+            className="w-full mt-2 py-2.5 rounded bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold text-xs transition shadow-sm"
           >
             {loading ? 'Creating Account...' : 'Create Account'}
           </button>
@@ -181,7 +127,7 @@ export const RegisterPage = () => {
 
         <p className="text-center text-xs text-slate-400 mt-5">
           Already registered?{' '}
-          <Link to="/login" className="text-purple-400 hover:underline">
+          <Link to="/login" className="text-blue-400 hover:underline">
             Login here
           </Link>
         </p>

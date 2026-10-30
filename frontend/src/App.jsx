@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
-import { Footer } from './components/Footer';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 import { HomePage } from './pages/HomePage';
@@ -19,9 +18,9 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <div className="flex flex-col min-h-screen">
+        <div className="min-h-screen">
           <Navbar />
-          <main className="flex-grow">
+          <main>
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/schemes" element={<SchemeCataloguePage />} />
@@ -61,7 +60,6 @@ export default function App() {
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </main>
-          <Footer />
         </div>
       </BrowserRouter>
     </AuthProvider>

@@ -1,493 +1,371 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { adminApi } from '../api/adminApi';
 import { schemeApi } from '../api/schemeApi';
 import { applicationApi } from '../api/applicationApi';
-import { Modal } from '../components/Modal';
+import { StatusBadge } from '../components/StatusBadge';
+
+const categories = [
+  'Agriculture & Farming',
+  'Education & Skill',
+  'Healthcare',
+  'Housing & Sanitation',
+  'Women & Child Development',
+  'Senior Citizen & Social Security',
+  'Financial Inclusion & Microenterprise'
+];
 
 export const AdminDashboardPage = () => {
-  const [activeTab, setActiveTab] = useState('applications'); // 'applications', 'schemes', 'beneficiaries'
-  const [stats, setStats] = useState(null);
-
-  // Applications
+  const [activeTab, setActiveTab] = useState('applications');
   const [applications, setApplications] = useState([]);
-  const [loadingApps, setLoadingApps] = useState(false);
-
-  // Schemes
   const [schemes, setSchemes] = useState([]);
-  const [loadingSchemes, setLoadingSchemes] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
-  const [newCategory, setNewCategory] = useState('Agriculture & Farming');
-  const [newRate, setNewRate] = useState('₹50,000 / grant');
-  const [newCode, setNewCode] = useState(`SCH-GEN-${Math.floor(100 + Math.random() * 900)}`);
-  const [addingScheme, setAddingScheme] = useState(false);
-
-  // Beneficiaries
   const [beneficiaries, setBeneficiaries] = useState([]);
-  const [loadingBen, setLoadingBen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  // Review Modal
-  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [editingScheme, setEditingScheme] = useState(null);
+  const [newTitle, setNewTitle] = useState('');
+  const [newCategory, setNewCategory] = useState(categories[0]);
+  const [newBenefit, setNewBenefit] = useState('');
+  const [newCode, setNewCode] = useState(`SCH-GEN-${Math.floor(100 + Math.random() * 900)}`);
+  const [newShortDescription, setNewShortDescription] = useState('');
+  const [newFullDescription, setNewFullDescription] = useState('');
+  const [eligibilityText, setEligibilityText] = useState('');
+  const [documentsText, setDocumentsText] = useState('');
+  const [savingScheme, setSavingScheme] = useState(false);
+
+  const [beneficiarySearch, setBeneficiarySearch] = useState('');
   const [currentApp, setCurrentApp] = useState(null);
   const [targetStatus, setTargetStatus] = useState('');
   const [remarks, setRemarks] = useState('');
   const [updating, setUpdating] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-
-  const fetchStats = async () => {
-    try {
-      const res = await adminApi.getStats();
-      if (res.success) setStats(res.stats);
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   const fetchApps = async () => {
-    setLoadingApps(true);
+    setLoading(true);
+    setError('');
     try {
       const res = await applicationApi.getApplications();
-      if (res.success) setApplications(res.applications || []);
-    } catch (e) {
-      console.error(e);
+      setApplications(res.applications || []);
+    } catch (err) {
+      setError(err.message || 'Could not load applications.');
     } finally {
-      setLoadingApps(false);
+      setLoading(false);
     }
   };
 
   const fetchSchemes = async () => {
-    setLoadingSchemes(true);
+    setLoading(true);
+    setError('');
     try {
       const res = await schemeApi.getSchemes({ status: 'all' });
-      if (res.success) setSchemes(res.schemes || []);
-    } catch (e) {
-      console.error(e);
+      setSchemes(res.schemes || []);
+    } catch (err) {
+      setError(err.message || 'Could not load schemes.');
     } finally {
-      setLoadingSchemes(false);
+      setLoading(false);
     }
   };
 
-  const fetchBeneficiaries = async () => {
-    setLoadingBen(true);
+  const fetchBeneficiaries = async (search = '') => {
+    setLoading(true);
+    setError('');
     try {
-      const res = await adminApi.getBeneficiaries();
-      if (res.success) setBeneficiaries(res.beneficiaries || []);
-    } catch (e) {
-      console.error(e);
+      const res = await adminApi.getBeneficiaries({ search });
+      setBeneficiaries(res.beneficiaries || []);
+    } catch (err) {
+      setError(err.message || 'Could not load beneficiaries.');
     } finally {
-      setLoadingBen(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchStats();
-    fetchApps();
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === 'schemes') fetchSchemes();
     if (activeTab === 'applications') fetchApps();
+    if (activeTab === 'schemes') fetchSchemes();
     if (activeTab === 'beneficiaries') fetchBeneficiaries();
   }, [activeTab]);
 
-  const handleAddScheme = async (e) => {
-    e.preventDefault();
-    if (!newTitle.trim()) return;
-    setAddingScheme(true);
+  const clearSchemeForm = () => {
+    setEditingScheme(null);
+    setNewTitle('');
+    setNewCategory(categories[0]);
+    setNewBenefit('');
+    setNewShortDescription('');
+    setNewFullDescription('');
+    setEligibilityText('');
+    setDocumentsText('');
+    setNewCode(`SCH-GEN-${Math.floor(100 + Math.random() * 900)}`);
+  };
+
+  const handleSaveScheme = async (event) => {
+    event.preventDefault();
+    setError('');
+    setSavingScheme(true);
+
+    const schemeData = {
+      title: newTitle.trim(),
+      code: newCode.trim(),
+      category: newCategory,
+      shortDescription: newShortDescription.trim(),
+      fullDescription: newFullDescription.trim(),
+      eligibilityCriteria: eligibilityText.split('\n').map((value) => value.trim()).filter(Boolean).map((criterion) => ({ criterion })),
+      requiredDocuments: documentsText.split('\n').map((value) => value.trim()).filter(Boolean).map((documentName) => ({ documentName }))
+    };
+
     try {
-      await schemeApi.createScheme({
-        title: newTitle,
-        code: newCode,
-        category: newCategory,
-        shortDescription: `Government assistance grant under ${newCategory}`,
-        fullDescription: `Targeted financial assistance and subsidy scheme under ${newCategory}.`,
-        sponsoringDepartment: 'Department of Public Welfare',
-        benefits: {
-          summary: newRate,
-          amountOrValue: newRate,
-          type: 'Direct Financial Subsidy'
-        },
-        applicationDeadline: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
-      });
-      setNewTitle('');
-      setNewCode(`SCH-GEN-${Math.floor(100 + Math.random() * 900)}`);
-      fetchSchemes();
-      fetchStats();
+      if (editingScheme) {
+        await schemeApi.updateScheme(editingScheme._id, {
+          ...schemeData,
+          'benefits.amountOrValue': newBenefit.trim()
+        });
+      } else {
+        await schemeApi.createScheme({
+          ...schemeData,
+          sponsoringDepartment: 'Department of Public Welfare',
+          benefits: { summary: newBenefit.trim(), amountOrValue: newBenefit.trim(), type: 'Direct Financial Subsidy' },
+          applicationDeadline: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
+        });
+      }
+      clearSchemeForm();
+      await fetchSchemes();
     } catch (err) {
-      alert(err.message || 'Error adding scheme');
+      setError(err.message || 'Could not save scheme.');
     } finally {
-      setAddingScheme(false);
+      setSavingScheme(false);
     }
   };
 
+  const handleEditScheme = (scheme) => {
+    setEditingScheme(scheme);
+    setNewTitle(scheme.title);
+    setNewCode(scheme.code);
+    setNewCategory(scheme.category);
+    setNewBenefit(scheme.benefits?.amountOrValue || '');
+    setNewShortDescription(scheme.shortDescription || '');
+    setNewFullDescription(scheme.fullDescription || '');
+    setEligibilityText((scheme.eligibilityCriteria || []).map((item) => item.criterion).join('\n'));
+    setDocumentsText((scheme.requiredDocuments || []).map((item) => item.documentName).join('\n'));
+  };
+
   const handleToggleScheme = async (id) => {
+    setError('');
     try {
       await schemeApi.toggleSchemeStatus(id);
-      fetchSchemes();
-      fetchStats();
+      await fetchSchemes();
     } catch (err) {
-      alert(err.message);
+      setError(err.message || 'Could not update scheme status.');
     }
   };
 
   const handleOpenReview = (app) => {
+    if (currentApp?._id === app._id) {
+      setCurrentApp(null);
+      return;
+    }
     setCurrentApp(app);
-    setErrorMsg('');
+    setError('');
     setRemarks('');
-
-    let def = '';
-    if (app.status === 'Submitted') def = 'Under Review';
-    if (app.status === 'Under Review') def = 'Approved';
-    if (app.status === 'Approved') def = 'Disbursed';
-    if (app.status === 'Rejected') def = 'Under Review';
-    setTargetStatus(def);
-    setReviewModalOpen(true);
+    setTargetStatus({
+      Submitted: 'Under Review',
+      'Under Review': 'Approved',
+      Approved: 'Disbursed',
+      Rejected: 'Under Review'
+    }[app.status] || 'Under Review');
   };
 
-  const handleStatusUpdate = async (e) => {
-    e.preventDefault();
-    setErrorMsg('');
+  const handleStatusUpdate = async (event) => {
+    event.preventDefault();
+    setError('');
     setUpdating(true);
     try {
-      const res = await applicationApi.updateStatus(currentApp._id, {
-        status: targetStatus,
-        remarks: remarks || `Status changed to ${targetStatus}`
-      });
-      if (res.success) {
-        setReviewModalOpen(false);
-        fetchApps();
-        fetchStats();
-      }
+      await applicationApi.updateStatus(currentApp._id, { status: targetStatus, remarks });
+      setCurrentApp(null);
+      await fetchApps();
     } catch (err) {
-      setErrorMsg(err.data?.message || err.message || 'Failed to update status');
+      setError(err.data?.message || err.message || 'Could not update application.');
     } finally {
       setUpdating(false);
     }
   };
 
+  const handleBeneficiarySearch = (event) => {
+    event.preventDefault();
+    fetchBeneficiaries(beneficiarySearch.trim());
+  };
+
   return (
-    <div className="bg-[#0e0e14] min-h-[90vh] py-8 px-4 sm:px-6 lg:px-8 text-xs">
+    <main className="bg-[#0e0e14] min-h-[90vh] px-4 py-8 text-white">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-xl font-bold text-white mb-6">
-          Admin Dashboard
-        </h1>
+        <h1 className="text-xl font-bold">Admin Dashboard</h1>
+        <nav className="mt-5 flex flex-wrap gap-2" aria-label="Admin sections">
+          {['applications', 'schemes', 'beneficiaries'].map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              aria-current={activeTab === tab ? 'page' : undefined}
+              className={`px-3 py-2 rounded text-sm capitalize ${activeTab === tab ? 'bg-[#2563eb] text-white' : 'border border-[#2f2f47] text-slate-300'}`}
+            >
+              {tab}
+            </button>
+          ))}
+        </nav>
 
-        {/* Tab Pills (Matching Screen 8 & 9 of Reference PDF) */}
-        <div className="flex gap-2 mb-6">
-          <button
-            onClick={() => setActiveTab('applications')}
-            className={`px-4 py-2 rounded text-xs font-semibold transition ${
-              activeTab === 'applications'
-                ? 'bg-[#a855f7] text-white'
-                : 'bg-[#1b1b2a] text-slate-400 hover:text-white'
-            }`}
-          >
-            Applications ({stats?.totalApplications || applications.length})
-          </button>
+        {error && <p role="alert" className="mt-4 text-sm text-red-300">{error}</p>}
+        {loading && <p className="mt-4 text-sm text-slate-400">Loading...</p>}
 
-          <button
-            onClick={() => setActiveTab('schemes')}
-            className={`px-4 py-2 rounded text-xs font-semibold transition ${
-              activeTab === 'schemes'
-                ? 'bg-[#a855f7] text-white'
-                : 'bg-[#1b1b2a] text-slate-400 hover:text-white'
-            }`}
-          >
-            Schemes ({stats?.totalSchemes || schemes.length})
-          </button>
-
-          <button
-            onClick={() => setActiveTab('beneficiaries')}
-            className={`px-4 py-2 rounded text-xs font-semibold transition ${
-              activeTab === 'beneficiaries'
-                ? 'bg-[#a855f7] text-white'
-                : 'bg-[#1b1b2a] text-slate-400 hover:text-white'
-            }`}
-          >
-            Beneficiaries ({beneficiaries.length})
-          </button>
-        </div>
-
-        {/* TAB 1: APPLICATIONS (Screen 8 & 9) */}
-        {activeTab === 'applications' && (
-          <div className="bg-[#161622] border border-[#232336] rounded-xl overflow-hidden shadow-xl">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#12121a] border-b border-[#232336] text-slate-400 font-semibold">
-                  <tr>
-                    <th className="py-3 px-4">Applicant</th>
-                    <th className="py-3 px-4">Scheme</th>
-                    <th className="py-3 px-4">Date</th>
-                    <th className="py-3 px-4">Rate</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#232336]">
-                  {applications.map((app) => (
-                    <tr key={app._id} className="hover:bg-[#1a1a28] transition">
-                      <td className="py-3.5 px-4">
-                        <p className="font-semibold text-white">{app.applicantDetails?.fullName}</p>
-                        <p className="text-[11px] text-slate-400">{app.applicantDetails?.phone}</p>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <p className="text-slate-200">{app.scheme?.title}</p>
-                        <p className="text-[10px] text-slate-400 font-mono">{app.scheme?.code}</p>
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-400">
-                        {new Date(app.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="py-3.5 px-4 font-semibold text-white">
-                        {app.scheme?.benefits?.amountOrValue}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                          app.status === 'Approved' || app.status === 'Disbursed'
-                            ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'
-                            : app.status === 'Rejected'
-                            ? 'bg-red-950/80 text-red-400 border border-red-800'
-                            : 'bg-blue-950/80 text-blue-400 border border-blue-800'
-                        }`}>
-                          {app.status.toUpperCase()}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <button
-                          onClick={() => handleOpenReview(app)}
-                          className="py-1 px-3 rounded bg-[#a855f7] hover:bg-[#9333ea] text-white text-xs font-medium transition"
-                        >
-                          Review & Update
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 2: SCHEMES (Screen 8 Layout) */}
-        {activeTab === 'schemes' && (
-          <div className="space-y-6">
-            {/* Add New Scheme Card (Matching Screen 8 of Reference PDF) */}
-            <div className="bg-[#161622] border border-[#232336] rounded-xl p-5">
-              <h2 className="text-sm font-bold text-white mb-3">
-                Add New Scheme
-              </h2>
-
-              <form onSubmit={handleAddScheme} className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                <div>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Scheme Title"
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    className="w-full px-3 py-2 rounded bg-[#1b1b2a] border border-[#2f2f47] text-white text-xs focus:outline-none focus:border-purple-500"
-                  />
-                </div>
-
-                <div>
-                  <select
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    aria-label="Category"
-                    className="w-full px-3 py-2 rounded bg-[#1b1b2a] border border-[#2f2f47] text-white text-xs focus:outline-none focus:border-purple-500"
-                  >
-                    <option value="Agriculture & Farming">Agriculture & Farming</option>
-                    <option value="Education & Skill">Education & Skill</option>
-                    <option value="Healthcare">Healthcare</option>
-                    <option value="Housing & Sanitation">Housing & Sanitation</option>
-                    <option value="Women & Child Development">Women & Child Development</option>
-                    <option value="Senior Citizen & Social Security">Senior Citizen & Social Security</option>
-                    <option value="Financial Inclusion & Microenterprise">Financial Inclusion & Microenterprise</option>
-                  </select>
-                </div>
-
-                <div>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Rate / Entitlement (e.g. ₹50,000)"
-                    value={newRate}
-                    onChange={(e) => setNewRate(e.target.value)}
-                    className="w-full px-3 py-2 rounded bg-[#1b1b2a] border border-[#2f2f47] text-white text-xs focus:outline-none focus:border-purple-500"
-                  />
-                </div>
-
-                <div>
-                  <button
-                    type="submit"
-                    disabled={addingScheme}
-                    className="w-full py-2 rounded bg-[#a855f7] hover:bg-[#9333ea] text-white font-semibold text-xs transition"
-                  >
-                    {addingScheme ? 'Adding...' : 'Add Scheme'}
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* Existing Schemes Table */}
-            <div className="bg-[#161622] border border-[#232336] rounded-xl overflow-hidden shadow-xl">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#12121a] border-b border-[#232336] text-slate-400 font-semibold">
-                  <tr>
-                    <th className="py-3 px-4">Scheme Title</th>
-                    <th className="py-3 px-4">Category</th>
-                    <th className="py-3 px-4">Reg No</th>
-                    <th className="py-3 px-4">Rate</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#232336]">
-                  {schemes.map((sc) => (
-                    <tr key={sc._id} className="hover:bg-[#1a1a28] transition">
-                      <td className="py-3.5 px-4 font-semibold text-white">{sc.title}</td>
-                      <td className="py-3.5 px-4 text-slate-300">{sc.category}</td>
-                      <td className="py-3.5 px-4 font-mono text-slate-400">{sc.code}</td>
-                      <td className="py-3.5 px-4 text-white font-medium">{sc.benefits?.amountOrValue}</td>
-                      <td className="py-3.5 px-4">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                          sc.isActive
-                            ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'
-                            : 'bg-red-950/80 text-red-400 border border-red-800'
-                        }`}>
-                          {sc.isActive ? 'AVAILABLE' : 'CLOSED'}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <button
-                          onClick={() => handleToggleScheme(sc._id)}
-                          className="py-1 px-3 rounded bg-[#1b1b2a] hover:bg-[#252538] text-slate-300 border border-[#2f2f47] text-xs transition"
-                        >
-                          {sc.isActive ? 'Close' : 'Reopen'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 3: BENEFICIARIES */}
-        {activeTab === 'beneficiaries' && (
-          <div className="bg-[#161622] border border-[#232336] rounded-xl overflow-hidden shadow-xl">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-[#12121a] border-b border-[#232336] text-slate-400 font-semibold">
+        {activeTab === 'applications' && !loading && (
+          <div className="mt-5 overflow-x-auto border border-[#232336] rounded">
+            <table className="w-full min-w-[720px] text-left text-sm">
+              <thead className="bg-[#161622] text-slate-400">
                 <tr>
-                  <th className="py-3 px-4">Beneficiary</th>
-                  <th className="py-3 px-4">Scheme</th>
-                  <th className="py-3 px-4">App No</th>
-                  <th className="py-3 px-4">Rate</th>
-                  <th className="py-3 px-4">DBT Ref</th>
-                  <th className="py-3 px-4">Status</th>
+                  <th className="p-3">Applicant</th>
+                  <th className="p-3">Scheme</th>
+                  <th className="p-3">Submitted</th>
+                  <th className="p-3">Status</th>
+                  <th className="p-3">Review</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#232336]">
-                {beneficiaries.map((b) => (
-                  <tr key={b._id} className="hover:bg-[#1a1a28] transition">
-                    <td className="py-3.5 px-4 font-semibold text-white">{b.applicantDetails?.fullName}</td>
-                    <td className="py-3.5 px-4 text-slate-300">{b.scheme?.title}</td>
-                    <td className="py-3.5 px-4 font-mono text-slate-400">{b.applicationNumber}</td>
-                    <td className="py-3.5 px-4 text-white font-medium">{b.scheme?.benefits?.amountOrValue}</td>
-                    <td className="py-3.5 px-4 font-mono text-purple-400">{b.demoDisbursementReference || 'Pending'}</td>
-                    <td className="py-3.5 px-4">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800">
-                        {b.status.toUpperCase()}
-                      </span>
-                    </td>
-                  </tr>
+                {applications.length === 0 && !error && <tr><td colSpan="5" className="p-4 text-slate-400">No applications found.</td></tr>}
+                {applications.map((app) => (
+                  <React.Fragment key={app._id}>
+                    <tr>
+                      <td className="p-3">{app.applicantDetails?.fullName}<p className="text-xs text-slate-400">{app.applicantDetails?.phone}</p></td>
+                      <td className="p-3">{app.scheme?.title}</td>
+                      <td className="p-3 text-slate-300">{new Date(app.createdAt).toLocaleDateString()}</td>
+                      <td className="p-3"><StatusBadge status={app.status} /></td>
+                      <td className="p-3">
+                        <button type="button" onClick={() => handleOpenReview(app)} className="text-blue-300 underline">
+                          {currentApp?._id === app._id ? 'Close' : 'Review'}
+                        </button>
+                      </td>
+                    </tr>
+                    {currentApp?._id === app._id && (
+                      <tr>
+                        <td colSpan="5" className="p-4 bg-[#161622]">
+                          <div className="grid gap-4 sm:grid-cols-2 text-sm text-slate-300">
+                            <div>
+                              <h2 className="font-semibold text-white">Application details</h2>
+                              <p className="mt-2">Phone: {app.applicantDetails?.phone}</p>
+                              <p>Address: {app.applicantDetails?.address}, {app.applicantDetails?.district}</p>
+                              <p>Annual income: {app.applicantDetails?.annualIncome}</p>
+                              <p className="mt-2">Purpose: {app.schemeSpecificData?.purposeOfAssistance}</p>
+                            </div>
+                            <div>
+                              <h2 className="font-semibold text-white">Eligibility and documents</h2>
+                              <ul className="mt-2 list-disc pl-5">
+                                {(app.schemeSpecificData?.eligibilityDeclarations || []).map((item, index) => <li key={index}>{item.criterion}: {item.declaredEligible ? 'Confirmed' : 'Not confirmed'}</li>)}
+                                {(app.documents || []).map((item, index) => <li key={`doc-${index}`}>{item.documentName} (listed)</li>)}
+                              </ul>
+                            </div>
+                          </div>
+                          <form onSubmit={handleStatusUpdate} className="mt-4 grid gap-3 sm:grid-cols-2">
+                            <label className="text-slate-300">Update status
+                              <select value={targetStatus} onChange={(event) => setTargetStatus(event.target.value)} className="mt-1 w-full rounded border border-[#2f2f47] bg-[#1b1b2a] px-3 py-2 text-white">
+                                {app.status === 'Submitted' && <option value="Under Review">Under Review</option>}
+                                {app.status === 'Under Review' && <><option value="Approved">Approved</option><option value="Rejected">Rejected</option></>}
+                                {app.status === 'Approved' && <option value="Disbursed">Disbursed</option>}
+                                {app.status === 'Rejected' && <option value="Under Review">Under Review (Re-evaluate)</option>}
+                              </select>
+                            </label>
+                            <label className="text-slate-300">Remarks{targetStatus === 'Rejected' ? ' (required)' : ''}
+                              <textarea rows="2" required={targetStatus === 'Rejected'} value={remarks} onChange={(event) => setRemarks(event.target.value)} className="mt-1 w-full rounded border border-[#2f2f47] bg-[#1b1b2a] px-3 py-2 text-white" />
+                            </label>
+                            <button type="submit" disabled={updating} className="justify-self-start rounded bg-[#2563eb] px-4 py-2 text-sm text-white sm:col-span-2">
+                              {updating ? 'Saving...' : 'Save Decision'}
+                            </button>
+                          </form>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
           </div>
         )}
 
-        {/* Review Modal */}
-        {currentApp && (
-          <Modal
-            isOpen={reviewModalOpen}
-            onClose={() => setReviewModalOpen(false)}
-            title={`Application Review: ${currentApp.applicationNumber}`}
-            maxWidth="max-w-md"
-          >
-            <form onSubmit={handleStatusUpdate} className="space-y-4 text-xs">
-              {errorMsg && (
-                <div className="p-2.5 rounded bg-red-950/60 border border-red-800 text-xs text-red-200">
-                  {errorMsg}
-                </div>
-              )}
-
-              <div className="p-3 rounded bg-[#1b1b2a] border border-[#26263a] text-slate-300 space-y-1">
-                <p><span className="text-slate-500">Applicant:</span> <strong className="text-white">{currentApp.applicantDetails?.fullName}</strong></p>
-                <p><span className="text-slate-500">Scheme:</span> {currentApp.scheme?.title}</p>
-                <p><span className="text-slate-500">Current Status:</span> <strong className="text-purple-400">{currentApp.status}</strong></p>
-              </div>
-
-              <div>
-                <label className="block text-slate-300 mb-1 font-semibold">
-                  Update Status to:
-                </label>
-                <select
-                  value={targetStatus}
-                  onChange={(e) => setTargetStatus(e.target.value)}
-                  aria-label="Target Status"
-                  className="w-full px-3 py-2 rounded bg-[#1b1b2a] border border-[#2f2f47] text-white focus:outline-none focus:border-purple-500"
-                >
-                  {currentApp.status === 'Submitted' && (
-                    <option value="Under Review">Under Review</option>
-                  )}
-                  {currentApp.status === 'Under Review' && (
-                    <>
-                      <option value="Approved">Approved</option>
-                      <option value="Rejected">Rejected</option>
-                    </>
-                  )}
-                  {currentApp.status === 'Approved' && (
-                    <option value="Disbursed">Disbursed</option>
-                  )}
-                  {currentApp.status === 'Rejected' && (
-                    <option value="Under Review">Under Review (Re-evaluate)</option>
-                  )}
+        {activeTab === 'schemes' && !loading && (
+          <section className="mt-5">
+            <h2 className="text-lg font-semibold">{editingScheme ? 'Update Scheme' : 'Add Scheme'}</h2>
+            <form onSubmit={handleSaveScheme} className="mt-3 grid gap-3 sm:grid-cols-2 text-sm">
+              <label className="text-slate-300">Title
+                <input required value={newTitle} onChange={(event) => setNewTitle(event.target.value)} className="mt-1 w-full rounded border border-[#2f2f47] bg-[#1b1b2a] px-3 py-2 text-white" />
+              </label>
+              <label className="text-slate-300">Scheme code
+                <input required value={newCode} onChange={(event) => setNewCode(event.target.value)} className="mt-1 w-full rounded border border-[#2f2f47] bg-[#1b1b2a] px-3 py-2 text-white" />
+              </label>
+              <label className="text-slate-300">Category
+                <select value={newCategory} onChange={(event) => setNewCategory(event.target.value)} className="mt-1 w-full rounded border border-[#2f2f47] bg-[#1b1b2a] px-3 py-2 text-white">
+                  {categories.map((category) => <option key={category} value={category}>{category}</option>)}
                 </select>
-              </div>
-
-              <div>
-                <label className="block text-slate-300 mb-1 font-semibold">
-                  Remarks:
-                </label>
-                <textarea
-                  rows="2"
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
-                  placeholder="Decision remarks..."
-                  className="w-full px-3 py-2 rounded bg-[#1b1b2a] border border-[#2f2f47] text-white focus:outline-none focus:border-purple-500"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2 border-t border-[#232336]">
-                <button
-                  type="button"
-                  onClick={() => setReviewModalOpen(false)}
-                  className="px-3 py-1.5 rounded bg-[#1b1b2a] text-slate-300 hover:bg-[#252538]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={updating}
-                  className="px-4 py-1.5 rounded bg-[#a855f7] hover:bg-[#9333ea] text-white font-semibold"
-                >
-                  {updating ? 'Updating...' : 'Save Decision'}
-                </button>
+              </label>
+              <label className="text-slate-300">Benefit amount or value
+                <input required value={newBenefit} onChange={(event) => setNewBenefit(event.target.value)} className="mt-1 w-full rounded border border-[#2f2f47] bg-[#1b1b2a] px-3 py-2 text-white" />
+              </label>
+              <label className="text-slate-300">Short description
+                <input required value={newShortDescription} onChange={(event) => setNewShortDescription(event.target.value)} className="mt-1 w-full rounded border border-[#2f2f47] bg-[#1b1b2a] px-3 py-2 text-white" />
+              </label>
+              <label className="text-slate-300 sm:col-span-2">Description
+                <textarea required rows="2" value={newFullDescription} onChange={(event) => setNewFullDescription(event.target.value)} className="mt-1 w-full rounded border border-[#2f2f47] bg-[#1b1b2a] px-3 py-2 text-white" />
+              </label>
+              <label className="text-slate-300">Eligibility criteria (one per line)
+                <textarea rows="3" value={eligibilityText} onChange={(event) => setEligibilityText(event.target.value)} className="mt-1 w-full rounded border border-[#2f2f47] bg-[#1b1b2a] px-3 py-2 text-white" />
+              </label>
+              <label className="text-slate-300">Required documents (one per line)
+                <textarea rows="3" value={documentsText} onChange={(event) => setDocumentsText(event.target.value)} className="mt-1 w-full rounded border border-[#2f2f47] bg-[#1b1b2a] px-3 py-2 text-white" />
+              </label>
+              <div className="flex gap-3 sm:col-span-2">
+                <button type="submit" disabled={savingScheme} className="rounded bg-[#2563eb] px-4 py-2 text-white">{savingScheme ? 'Saving...' : editingScheme ? 'Save Changes' : 'Add Scheme'}</button>
+                {editingScheme && <button type="button" onClick={clearSchemeForm} className="text-slate-300 underline">Cancel</button>}
               </div>
             </form>
-          </Modal>
+
+            <div className="mt-7 overflow-x-auto border border-[#232336] rounded">
+              <table className="w-full min-w-[700px] text-left text-sm">
+                <thead className="bg-[#161622] text-slate-400"><tr><th className="p-3">Scheme</th><th className="p-3">Category</th><th className="p-3">Benefit</th><th className="p-3">Status</th><th className="p-3">Actions</th></tr></thead>
+                <tbody className="divide-y divide-[#232336]">
+                  {schemes.length === 0 && !error && <tr><td colSpan="5" className="p-4 text-slate-400">No schemes found.</td></tr>}
+                  {schemes.map((scheme) => (
+                    <tr key={scheme._id}>
+                      <td className="p-3">{scheme.title}<p className="text-xs text-slate-400">{scheme.code}</p></td>
+                      <td className="p-3 text-slate-300">{scheme.category}</td>
+                      <td className="p-3 text-slate-300">{scheme.benefits?.amountOrValue}</td>
+                      <td className="p-3 text-slate-300">{scheme.isActive ? 'Open' : 'Closed'}</td>
+                      <td className="p-3"><button type="button" onClick={() => handleEditScheme(scheme)} className="mr-3 text-blue-300 underline">Edit</button><button type="button" onClick={() => handleToggleScheme(scheme._id)} className="text-slate-300 underline">{scheme.isActive ? 'Close' : 'Reopen'}</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
+        {activeTab === 'beneficiaries' && !loading && (
+          <section className="mt-5">
+            <form onSubmit={handleBeneficiarySearch} className="flex gap-2">
+              <input type="search" aria-label="Search beneficiaries" value={beneficiarySearch} onChange={(event) => setBeneficiarySearch(event.target.value)} placeholder="Search name, phone, district, or application number" className="flex-1 rounded border border-[#2f2f47] bg-[#1b1b2a] px-3 py-2 text-sm text-white" />
+              <button type="submit" className="rounded bg-[#2563eb] px-4 py-2 text-sm text-white">Search</button>
+            </form>
+            <div className="mt-4 overflow-x-auto border border-[#232336] rounded">
+              <table className="w-full min-w-[680px] text-left text-sm">
+                <thead className="bg-[#161622] text-slate-400"><tr><th className="p-3">Beneficiary</th><th className="p-3">Scheme</th><th className="p-3">Application number</th><th className="p-3">Status</th></tr></thead>
+                <tbody className="divide-y divide-[#232336]">
+                  {beneficiaries.length === 0 && !error && <tr><td colSpan="4" className="p-4 text-slate-400">No beneficiaries found.</td></tr>}
+                  {beneficiaries.map((beneficiary) => (
+                    <tr key={beneficiary._id}>
+                      <td className="p-3">{beneficiary.applicantDetails?.fullName}<p className="text-xs text-slate-400">{beneficiary.applicantDetails?.phone}</p></td>
+                      <td className="p-3">{beneficiary.scheme?.title}</td>
+                      <td className="p-3 font-mono text-xs text-slate-300">{beneficiary.applicationNumber}</td>
+                      <td className="p-3"><StatusBadge status={beneficiary.status} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
         )}
       </div>
-    </div>
+    </main>
   );
 };

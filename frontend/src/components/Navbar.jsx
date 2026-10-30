@@ -52,8 +52,8 @@ export const Navbar = () => {
             {isAuthenticated && isAdmin && (
               <Link
                 to="/admin"
-                className={`transition hover:text-purple-300 ${
-                  isActive('/admin') ? 'text-purple-400 font-semibold' : 'text-slate-400'
+                className={`transition hover:text-blue-300 ${
+                  isActive('/admin') ? 'text-blue-400 font-semibold' : 'text-slate-400'
                 }`}
               >
                 Admin

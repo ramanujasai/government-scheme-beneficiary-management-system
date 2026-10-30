@@ -1,167 +1,163 @@
 # GOVERNMENT SCHEME BENEFICIARY MANAGEMENT SYSTEM
 
 ### BACHELOR OF TECHNOLOGY IN COMPUTER SCIENCE AND ENGINEERING
-**Subject:** Full Stack Development – 2 (FSD-2)  
-**Academic Year:** 2026–2027  
+**Subject:** Full Stack Development - 2 (FSD-2)
+**Academic Year:** 2026-2027
+
+### Project Team
+
+| Student | Roll Number |
+|---|---|
+| G. Ramanuja Sai | 25505A0508 |
+| G. Hemanth Kumar | 25505A0509 |
+| K. Charan | 25505A0510 |
+| K. Sandeep | 24501A05A8 |
+
+**PRASAD V POTLURI SIDDHARTHA INSTITUTE OF TECHNOLOGY**
+Kanuru, Vijayawada - 520007
 
 ---
 
-## ABSTRACT :-
-The Government Scheme Beneficiary Management System is a web application designed to manage government scheme applications and beneficiary records efficiently.
+## CERTIFICATE
 
-The system allows citizens to register, log in, view available government schemes, submit applications, and track their application status. The administrator can manage schemes, verify applications, approve or reject applications, and maintain beneficiary records.
+This is to certify that the project titled **Government Scheme Beneficiary Management System** was developed by the students listed above as part of Full Stack Development - 2 during the academic year 2026-2027.
 
-The main purpose of this project is to reduce manual work, organize records, and make the government scheme application process easier and more transparent.
-
----
-
-## PROBLEM STATEMENT :-
-Many people face difficulties finding information about government schemes and tracking their applications. Managing applications manually can lead to errors, duplicate records, and delays.
-
-Therefore, we propose a web-based system that provides a centralized platform for managing government schemes, applications, and beneficiary information.
+| Project Guide | Head of Department |
+|---|---|
+| Signature: ____________________ | Signature: ____________________ |
 
 ---
 
-## OBJECTIVES :-
-* To provide information about available government schemes.
-* To allow citizens to apply for government schemes online.
-* To maintain application and beneficiary records.
-* To help administrators verify applications.
-* To allow users to track application status.
-* To reduce paperwork and manual errors.
-* To provide secure access to users and administrators.
+## INDEX
+
+1. Abstract
+2. Introduction
+3. Objectives and Scope
+4. Software Used
+5. UML Diagrams
+6. Database Design
+7. Folder Structure
+8. Result and Output Screens
+9. Conclusion and Future Scope
+10. References
 
 ---
 
-## PROJECT OVERVIEW :-
-The Government Scheme Beneficiary Management System consists of two main users:
+## 1. ABSTRACT
 
-### 1. Citizen (User) :-
-The citizen can register, log in, view government schemes, submit applications, and check application status.
+The Government Scheme Beneficiary Management System is a web application for publishing government scheme information and managing citizen applications. Citizens can create accounts, review scheme requirements, submit applications, and check their application status. Administrators can manage schemes, review applications, record decisions, and search beneficiary records.
 
-### 2. Administrator (Admin) :-
-The administrator can add or update schemes, view applications, verify application details, approve or reject applications, and manage beneficiary records.
-
-The system stores all information in a database and allows users to access the relevant information through a web interface.
+The system stores records in MongoDB and separates citizen and administrator access. It is an academic demonstration: scheme information and benefit values are fictional, benefit disbursement is simulated, and the application form records a required-document checklist without uploading files.
 
 ---
 
-## MAIN MODULES :-
+## 2. INTRODUCTION
 
-### 1. User Registration and Login
-Citizens can create an account and log in using their credentials. Passwords are encrypted with bcrypt and authentication is managed via JWT.
+### Problem Statement
 
-### 2. Government Schemes
-Users can view scheme names, categories, eligibility criteria, benefits, and required documents.
+Citizens can have difficulty finding scheme information and checking the progress of applications. Paper-based record keeping can also lead to duplicate entries, mistakes, and processing delays. This project provides one web portal for scheme information, application submission, review, and status tracking.
 
-### 3. Scheme Application
-Users can select a scheme, fill out an application form, verify eligibility criteria, and submit required document records.
+### Project Overview
 
-### 4. Admin Dashboard
-The administrator can manage scheme details (add, edit, close, reopen) and view all submitted citizen applications.
+The system has two user roles:
 
-### 5. Application Verification
-The administrator scrutinizes submitted claims, verifies documents, and records decisions (Approved or Rejected) with official remarks.
+1. **Citizen:** Register and log in, view schemes and their requirements, submit an application, and check its status.
+2. **Administrator:** Add or update schemes, close or reopen schemes, review submitted details, record an approval or rejection, and search approved beneficiary records.
 
-### 6. Application Status Tracking
-Citizens can track their application progress across *Submitted*, *Under Review*, *Approved*, *Rejected*, and *Disbursed* stages.
-
-### 7. Beneficiary Management
-The administrator maintains records of approved and disbursed beneficiaries and can search and export beneficiary information.
+Passwords are hashed with bcrypt. JWT authentication protects private routes, and beneficiaries can access only their own applications. The backend validates application data and enforces permitted status changes.
 
 ---
 
-## TECHNOLOGY STACK :-
+## 3. OBJECTIVES AND SCOPE
 
-### Frontend:
-* React 19
-* Vite
-* Tailwind CSS
+### Objectives
 
-### Backend:
-* Node.js
-* Express.js
+- Provide scheme names, categories, descriptions, benefits, eligibility criteria, and required documents.
+- Let citizens register, log in, and submit scheme applications online.
+- Let administrators manage schemes and review submitted applications.
+- Let citizens check application status and administrator remarks.
+- Maintain searchable records of approved beneficiaries.
+- Reduce manual record keeping and provide role-based access.
 
-### Database:
-* MongoDB
-* Mongoose ODM
+### Scope
 
-### Development Tools:
-* Visual Studio Code
-* Web Browser
-* Postman
-* Git
+The project includes registration and login, a searchable scheme catalogue, scheme details, an application form, beneficiary status records, an administrator review queue, scheme management, and beneficiary search. Application statuses are Submitted, Under Review, Approved, Rejected, and Disbursed. Disbursed is a demonstration-only stage after approval.
 
-The frontend provides the user interface, the backend handles application logic, and MongoDB stores the project data.
+The application form stores the required-document list as demonstration metadata. Real file upload, real benefit payments, Aadhaar numbers, and banking credentials are outside the scope.
 
 ---
 
-## UML DIAGRAMS :-
+## 4. SOFTWARE USED
 
-### Use Case Diagram :-
+| Area | Technology |
+|---|---|
+| Frontend | React 19, Vite, Tailwind CSS, React Router |
+| Backend | Node.js, Express.js |
+| Database | MongoDB, Mongoose |
+| Authentication | bcryptjs, JSON Web Tokens |
+| Development tools | Visual Studio Code, web browser, Postman, Git |
+
+The React client calls the Express REST API. Express validates requests, applies role checks, and stores users, schemes, and applications through Mongoose models.
+
+---
+
+## 5. UML DIAGRAMS
+
+### Use Case Diagram
+
 ```mermaid
 flowchart LR
     Citizen((Citizen))
     Admin((Administrator))
-
-    subgraph System["Government Scheme Beneficiary Management System"]
-        UC1[Register]
-        UC2[Login]
-        UC3[View Schemes]
-        UC4[Apply for Scheme]
-        UC5[Track Application Status]
-        UC6[Manage Schemes]
-        UC7[View Applications]
-        UC8[Verify Applications]
-        UC9[Approve / Reject Applications]
-        UC10[Manage Beneficiary Records]
+    subgraph System[Government Scheme Beneficiary Management System]
+        Register[Register citizen account]
+        Login[Log in]
+        Browse[View schemes]
+        Apply[Submit application]
+        Track[Check application status]
+        Manage[Add or update schemes]
+        Review[Review applications]
+        Decide[Approve or reject]
+        Search[Search beneficiaries]
     end
-
-    Citizen --> UC1
-    Citizen --> UC2
-    Citizen --> UC3
-    Citizen --> UC4
-    Citizen --> UC5
-
-    Admin --> UC2
-    Admin --> UC6
-    Admin --> UC7
-    Admin --> UC8
-    Admin --> UC9
-    Admin --> UC10
+    Citizen --> Register
+    Citizen --> Login
+    Citizen --> Browse
+    Citizen --> Apply
+    Citizen --> Track
+    Admin --> Login
+    Admin --> Manage
+    Admin --> Review
+    Admin --> Decide
+    Admin --> Search
 ```
 
----
+### ER Diagram
 
-### ER Diagram :-
 ```mermaid
 erDiagram
-    USERS ||--o{ APPLICATIONS : "submits"
-    SCHEMES ||--o{ APPLICATIONS : "belongs to"
-
+    USERS ||--o{ APPLICATIONS : submits
+    SCHEMES ||--o{ APPLICATIONS : receives
     USERS {
         ObjectId userId PK
         string name
         string email
-        string password
+        string passwordHash
         string phone
         string role
         string address
-        string district
     }
-
     SCHEMES {
         ObjectId schemeId PK
         string title
         string code
         string category
         string description
-        string benefits
+        object benefits
+        array eligibilityCriteria
         array requiredDocuments
-        date deadline
         boolean isActive
     }
-
     APPLICATIONS {
         ObjectId applicationId PK
         ObjectId userId FK
@@ -173,159 +169,154 @@ erDiagram
     }
 ```
 
----
+### Class Diagram
 
-### Class Diagram :-
 ```mermaid
 classDiagram
     class User {
-        +String userId
-        +String name
-        +String email
-        +String password
-        +String phone
-        +String role
-        +String address
-        +register()
-        +login()
+        String name
+        String email
+        String password
+        String phone
+        String role
+        register()
+        login()
     }
-
     class Scheme {
-        +String schemeId
-        +String title
-        +String code
-        +String category
-        +String benefits
-        +Date deadline
-        +Boolean isActive
-        +addScheme()
-        +updateScheme()
-        +toggleStatus()
+        String title
+        String code
+        String category
+        Object benefits
+        Boolean isActive
+        addScheme()
+        updateScheme()
+        toggleStatus()
     }
-
     class Application {
-        +String applicationId
-        +String applicationNumber
-        +String userId
-        +String schemeId
-        +String status
-        +String adminRemarks
-        +submitApplication()
-        +updateStatus()
-        +viewApplication()
+        String applicationNumber
+        String status
+        String adminRemarks
+        submitApplication()
+        updateStatus()
     }
-
     User "1" --> "*" Application : submits
-    Scheme "1" --> "*" Application : has
+    Scheme "1" --> "*" Application : receives
 ```
 
----
+### Activity Diagram
 
-### Activity Diagram :-
 ```mermaid
 flowchart TD
-    A([Start]) --> B[Citizen Registers / Logs in]
-    B --> C[Browse Available Schemes]
-    C --> D[Fill Application Form]
-    D --> E[Submit Application]
-    E --> F[Status: Submitted]
-    F --> G[Admin Reviews Application]
-    G --> H[Status: Under Review]
-    H --> I{Admin Decision}
-    I -- Reject --> J[Status: Rejected with Remarks]
-    I -- Approve --> K[Status: Approved]
-    K --> L[Status: Disbursed]
-    J --> M([End])
-    L --> M
+    Start([Start]) --> Login[Citizen registers or logs in]
+    Login --> Browse[Browse scheme information]
+    Browse --> Form[Complete application and declarations]
+    Form --> Submit[Submit application]
+    Submit --> Review[Administrator reviews application]
+    Review --> Decision{Decision}
+    Decision -->|Approve| Approved[Approved]
+    Decision -->|Reject with remarks| Rejected[Rejected]
+    Approved --> Disbursed[Disbursed - demo stage]
+    Rejected --> End([End])
+    Disbursed --> End
 ```
 
----
+### Sequence Diagram
 
-### Sequence Diagram :-
 ```mermaid
 sequenceDiagram
     actor Citizen
-    participant UI as Frontend (React)
-    participant API as Backend (Express)
-    participant DB as Database (MongoDB)
+    participant UI as React Client
+    participant API as Express API
+    participant DB as MongoDB
     actor Admin
-
-    Citizen->>UI: Submit Scheme Application
+    Citizen->>UI: Submit application
     UI->>API: POST /api/applications
-    API->>DB: Save application (Status: Submitted)
-    DB-->>API: Application Saved
-    API-->>UI: 201 Created (Application Number)
-
-    Admin->>UI: Open Applications Queue
-    UI->>API: GET /api/applications
-    API->>DB: Fetch applications
-    DB-->>API: Return applications
-    API-->>UI: Display applications list
-
-    Admin->>UI: Update Status (Approved)
+    API->>DB: Validate and save application
+    DB-->>API: Saved record
+    API-->>UI: Application number and status
+    Admin->>UI: Review application
     UI->>API: PATCH /api/applications/:id/status
-    API->>DB: Update application status
-    DB-->>API: Status updated
-    API-->>UI: Success confirmation
+    API->>DB: Validate transition and update record
+    DB-->>API: Updated status and remarks
+    API-->>UI: Decision result
 ```
 
 ---
 
-## FOLDER STRUCTURE :-
-```
-c:\FSD II\project\
+## 6. DATABASE DESIGN
+
+| Collection | Main fields | Purpose |
+|---|---|---|
+| Users | Name, email, hashed password, phone, role, address and location | Stores citizen and administrator accounts. |
+| Schemes | Title, code, category, descriptions, benefits, eligibility, documents, deadline and active status | Stores information displayed in the public catalogue. |
+| Applications | User and scheme references, application number, applicant details, declarations, document checklist, status, remarks and status history | Stores applications and their review progress. |
+
+The beneficiary directory is built from approved or disbursed application records; it is not a separate collection. The database does not store Aadhaar numbers or bank credentials.
+
+---
+
+## 7. FOLDER STRUCTURE
+
+```text
+project/
 ├── backend/
-│   ├── src/
-│   │   ├── config/db.js
-│   │   ├── models/User.js, Scheme.js, Application.js
-│   │   ├── middleware/auth.js, validate.js, errorHandler.js
-│   │   ├── controllers/authController.js, schemeController.js, applicationController.js, adminController.js
-│   │   ├── routes/authRoutes.js, schemeRoutes.js, applicationRoutes.js, adminRoutes.js
-│   │   ├── utils/statusWorkflow.js
-│   │   ├── seeds/seed.js
-│   │   └── server.js
-│   └── package.json
+│   └── src/
+│       ├── config/db.js
+│       ├── controllers/
+│       ├── middleware/
+│       ├── models/User.js, Scheme.js, Application.js
+│       ├── routes/
+│       ├── seeds/seed.js
+│       ├── tests/testWorkflow.js
+│       ├── utils/statusWorkflow.js
+│       └── server.js
 └── frontend/
-    ├── src/
-    │   ├── api/client.js, authApi.js, schemeApi.js, applicationApi.js, adminApi.js
-    │   ├── context/AuthContext.jsx
-    │   ├── components/Navbar.jsx, Footer.jsx, StatusBadge.jsx, WorkflowTimeline.jsx, Modal.jsx
-    │   ├── pages/HomePage.jsx, SchemeCataloguePage.jsx, SchemeDetailsPage.jsx, LoginPage.jsx,
-    │   │         RegisterPage.jsx, ApplicationFormPage.jsx, BeneficiaryDashboardPage.jsx, AdminDashboardPage.jsx
-    │   ├── App.jsx
-    │   └── main.jsx
-    └── package.json
+    └── src/
+        ├── api/
+        ├── components/Navbar.jsx, ProtectedRoute.jsx, StatusBadge.jsx
+        ├── context/AuthContext.jsx
+        ├── pages/
+        ├── App.jsx
+        ├── index.css
+        └── main.jsx
 ```
 
 ---
 
-## IMPLEMENTED SCREENS :-
-1. **Home Screen:** Search bar, category quick access, overview metrics, and featured open schemes.
-2. **Schemes Catalogue Screen:** Filterable grid with category pills, keyword search, and open/closed filters.
-3. **Scheme Details Screen:** Full description, eligibility criteria, benefits summary, and application action.
-4. **Registration Screen:** Citizen sign-up form with name, email, password, phone, address, and category.
-5. **Login Screen:** User sign-in with email and password, plus quick-login test presets.
-6. **Application Form Screen:** Multi-section form capturing applicant details, criteria declarations, and document records.
-7. **Beneficiary Dashboard Screen:** List of citizen's submitted applications, status filtering, visual timeline, and printable slip.
-8. **Admin Dashboard Screen:** Analytics summary, scheme manager (add/edit/toggle), application review queue, and beneficiary roster.
+## 8. RESULT AND OUTPUT SCREENS
+
+The application provides these screens:
+
+1. **Home:** Short project introduction and links to schemes or the relevant dashboard.
+2. **Scheme catalogue:** Searchable list of scheme names, categories, codes, and benefits.
+3. **Scheme details:** Description, benefit, eligibility criteria, required documents, and application link.
+4. **Registration and login:** Citizen account creation and authentication.
+5. **Application form:** Applicant details, eligibility declarations, purpose, required-document checklist, and truthfulness declaration.
+6. **Beneficiary dashboard:** Application number, submission date, current status, and administrator remarks.
+7. **Admin dashboard:** Application review, add/update/close/reopen schemes, and beneficiary search.
 
 ---
 
-## CONCLUSION & FUTURE SCOPE :-
+## 9. CONCLUSION AND FUTURE SCOPE
 
-### Conclusion:
-The Government Scheme Beneficiary Management System successfully addresses the challenges of manual application processing. By centralizing scheme management, automating status workflows, and providing transparency for citizens and administrators, the system reduces paperwork, prevents duplication, and accelerates welfare delivery.
+### Conclusion
 
-### Future Scope:
-* SMS and email notification integration for instant status updates.
-* Regional language localization (Telugu, Hindi, Tamil).
-* Automated eligibility recommendation based on user demographics.
+The system brings scheme information, application records, administrative review, and status tracking into one web application. It demonstrates the main citizen and administrator workflows described in the project overview.
+
+### Future Scope
+
+- Add secure document upload and verification.
+- Add email or SMS status notifications.
+- Add regional language support.
+- Connect approved applications to a real benefit-disbursement service only when authorized infrastructure is available.
 
 ---
 
-## REFERENCES :-
+## 10. REFERENCES
+
 1. React Documentation - https://react.dev
-2. Node.js & Express.js Documentation - https://expressjs.com
-3. MongoDB Documentation - https://mongodb.com
-4. Mongoose Documentation - https://mongoosejs.com
-5. Tailwind CSS - https://tailwindcss.com
+2. Vite Documentation - https://vite.dev
+3. Express Documentation - https://expressjs.com
+4. MongoDB Documentation - https://www.mongodb.com/docs
+5. Mongoose Documentation - https://mongoosejs.com/docs
+6. Tailwind CSS Documentation - https://tailwindcss.com/docs

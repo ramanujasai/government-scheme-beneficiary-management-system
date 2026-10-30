@@ -12,9 +12,9 @@ export default {
         darkCardBorder: '#232336',
         darkInput: '#1b1b2a',
         darkInputBorder: '#2f2f47',
-        primaryPurple: '#9333ea',
-        primaryPurpleHover: '#7e22ce',
-        btnPurple: '#a855f7',
+        primaryBlue: '#1d4ed8',
+        primaryBlueHover: '#1e40af',
+        btnBlue: '#2563eb',
       }
     },
   },

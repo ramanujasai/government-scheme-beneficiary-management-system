@@ -1,42 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { schemeApi } from '../api/schemeApi';
-import { Search, X } from 'lucide-react';
 
 export const SchemeCataloguePage = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const initialCategory = searchParams.get('category') || 'All';
-  const initialSearch = searchParams.get('search') || '';
-
   const [schemes, setSchemes] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
-  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [error, setError] = useState('');
 
-  const categories = [
-    'All',
-    'Agriculture & Farming',
-    'Education & Skill',
-    'Healthcare',
-    'Housing & Sanitation',
-    'Women & Child Development',
-    'Senior Citizen & Social Security',
-    'Financial Inclusion & Microenterprise'
-  ];
-
-  const fetchSchemes = async () => {
+  const fetchSchemes = async (search = '') => {
     setLoading(true);
+    setError('');
     try {
-      const res = await schemeApi.getSchemes({
-        category: selectedCategory === 'All' ? undefined : selectedCategory,
-        search: searchTerm.trim() || undefined,
-        status: 'all'
-      });
-      if (res.success) {
-        setSchemes(res.schemes || []);
-      }
+      const res = await schemeApi.getSchemes({ search, status: 'all' });
+      setSchemes(res.schemes || []);
     } catch (err) {
-      console.error('Error fetching schemes:', err);
+      setError(err.message || 'Could not load schemes.');
     } finally {
       setLoading(false);
     }
@@ -44,121 +23,65 @@ export const SchemeCataloguePage = () => {
 
   useEffect(() => {
     fetchSchemes();
-  }, [selectedCategory]);
+  }, []);
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    fetchSchemes();
+  const handleSearch = (event) => {
+    event.preventDefault();
+    fetchSchemes(searchTerm.trim());
   };
 
   return (
-    <div className="bg-[#0e0e14] min-h-[90vh] py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-xl font-bold text-white mb-6">
-          Schemes
-        </h1>
+    <main className="bg-[#0e0e14] min-h-[90vh] px-4 py-8 text-white">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-xl font-bold">Government Schemes</h1>
+        <form onSubmit={handleSearch} className="flex gap-2 my-5">
+          <input
+            type="search"
+            aria-label="Search schemes"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search by scheme name or code"
+            className="flex-1 px-3 py-2 rounded bg-[#1b1b2a] border border-[#2f2f47] text-sm text-white"
+          />
+          <button type="submit" className="px-4 py-2 rounded bg-[#2563eb] text-white">Search</button>
+        </form>
 
-        {/* Search & Categories Bar */}
-        <div className="bg-[#161622] border border-[#232336] rounded-xl p-4 mb-6 space-y-3">
-          <form onSubmit={handleSearchSubmit} className="flex gap-2">
-            <div className="relative flex-grow">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search schemes by name or code..."
-                className="w-full pl-9 pr-8 py-2 rounded bg-[#1b1b2a] border border-[#2f2f47] text-white focus:outline-none focus:border-purple-500 text-xs"
-              />
-              {searchTerm && (
-                <button
-                  type="button"
-                  onClick={() => setSearchTerm('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              className="px-4 py-2 bg-[#a855f7] hover:bg-[#9333ea] text-white font-semibold text-xs rounded transition"
-            >
-              Search
-            </button>
-          </form>
-
-          {/* Category Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 rounded text-xs whitespace-nowrap transition ${
-                  selectedCategory === cat
-                    ? 'bg-[#a855f7] text-white font-semibold'
-                    : 'bg-[#1b1b2a] text-slate-400 hover:text-white hover:bg-[#252538]'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Schemes Grid (Matching Screen 4 of Reference PDF) */}
         {loading ? (
-          <div className="text-center text-slate-500 text-xs py-10">Loading schemes...</div>
+          <p className="py-8 text-sm text-slate-400">Loading schemes...</p>
+        ) : error ? (
+          <p role="alert" className="py-4 text-sm text-red-300">{error}</p>
         ) : schemes.length === 0 ? (
-          <div className="bg-[#161622] border border-[#232336] rounded-xl p-8 text-center text-slate-400 text-xs">
-            No schemes found matching the criteria.
-          </div>
+          <p className="py-8 text-sm text-slate-400">No schemes found.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {schemes.map((scheme) => (
-              <div
-                key={scheme._id}
-                className="bg-[#161622] border border-[#232336] rounded-xl p-5 flex flex-col justify-between hover:border-[#333348] transition"
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <h3 className="text-sm font-bold text-white leading-snug">
-                      <Link to={`/schemes/${scheme._id}`} className="hover:text-purple-300">
-                        {scheme.title}
-                      </Link>
-                    </h3>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
-                      scheme.isActive
-                        ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'
-                        : 'bg-red-950/80 text-red-400 border border-red-800'
-                    }`}>
-                      {scheme.isActive ? 'AVAILABLE' : 'CLOSED'}
-                    </span>
-                  </div>
-
-                  <div className="space-y-1 text-xs text-slate-400 mb-2">
-                    <p><span className="text-slate-500">Type:</span> {scheme.category}</p>
-                    <p><span className="text-slate-500">Reg No:</span> <span className="font-mono text-slate-300">{scheme.code}</span></p>
-                    <p className="font-semibold text-white pt-1">
-                      {scheme.benefits?.amountOrValue}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-5 pt-3 border-t border-[#232336] text-center">
-                  <Link
-                    to={`/schemes/${scheme._id}`}
-                    className="inline-block w-full py-1.5 rounded bg-[#1f1f2e] hover:bg-[#2a2a3d] border border-[#2e2e42] text-xs text-slate-200 transition"
-                  >
-                    View Details
-                  </Link>
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto border border-[#232336] rounded">
+            <table className="w-full min-w-[620px] text-left text-sm">
+              <thead className="bg-[#161622] text-slate-400">
+                <tr>
+                  <th className="p-3">Scheme</th>
+                  <th className="p-3">Category</th>
+                  <th className="p-3">Benefit</th>
+                  <th className="p-3">Details</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#232336]">
+                {schemes.map((scheme) => (
+                  <tr key={scheme._id}>
+                    <td className="p-3">
+                      <p className="font-medium">{scheme.title}</p>
+                      <p className="text-xs text-slate-400">{scheme.code}</p>
+                    </td>
+                    <td className="p-3 text-slate-300">{scheme.category}</td>
+                    <td className="p-3 text-slate-300">{scheme.benefits?.amountOrValue}</td>
+                    <td className="p-3">
+                      <Link to={`/schemes/${scheme._id}`} className="text-blue-300 underline">View details</Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 };

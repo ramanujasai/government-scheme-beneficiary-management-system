@@ -20,7 +20,10 @@ export const request = async (endpoint, options = {}) => {
   try {
     data = await response.json();
   } catch {
-    data = { success: false, message: 'Invalid response from server' };
+    data = {
+      success: false,
+      message: 'Unexpected response from the API. Check that the backend is running and connected to its database.'
+    };
   }
 
   if (!response.ok) {

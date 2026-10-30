@@ -1,8 +1,6 @@
 import { request } from './client';
 
 export const adminApi = {
-  getStats: () => request('/admin/stats'),
-
   getBeneficiaries: (params = {}) => {
     const query = new URLSearchParams();
     if (params.search) query.append('search', params.search);

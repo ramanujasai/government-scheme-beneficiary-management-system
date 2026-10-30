@@ -8,12 +8,7 @@ export const ProtectedRoute = ({ children, requireAdmin = false }) => {
 
   if (loading) {
     return (
-      <div className="flex-grow flex items-center justify-center py-20">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-civic-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm font-medium text-slate-600">Verifying security session...</p>
-        </div>
-      </div>
+      <p role="status" className="py-12 text-center text-sm text-slate-400">Checking sign-in...</p>
     );
   }
 

@@ -6,6 +6,7 @@
 ---
 
 ### Important Disclaimer
+> Required documents are shown as a checklist; the prototype does not upload files.
 > **Academic Prototype Notice:** This system is an educational simulation developed for academic evaluation. All scheme names, departments, eligibility criteria, benefits, and monetary values are **fictional demonstration data**.  
 > In compliance with privacy standards, this platform **does NOT collect or store sensitive personal identifiers** (such as Aadhaar numbers) or real banking/payment credentials. Benefit disbursement is a simulated workflow milestone only.
 
@@ -16,9 +17,9 @@
 The **Government Scheme Beneficiary Management System** is a full-stack civic web application engineered to bridge the gap between welfare administrators and citizens. It streamlines public scheme discovery, digital application submission, role-based scrutiny, audit-logged decision making, and transparent benefit tracking.
 
 ### Core Capabilities
-* **Public Welfare Scheme Catalogue:** Browse, filter by 7 sectors, search by keyword, inspect eligibility rules, benefit summaries, and document requirements.
-* **Beneficiary Portal:** Secure registration, authentication with JWT, pre-filled application forms, document declaration, and real-time lifecycle tracking.
-* **Administrative Control Center:** Add/edit/close schemes, scrutinize citizen claims, verify documents, record decisions with mandatory remarks, and access the enrolled beneficiary roster.
+* **Public Welfare Scheme Catalogue:** Browse active schemes, search by keyword, and inspect eligibility rules, benefit summaries, and document requirements.
+* **Beneficiary Portal:** Secure registration, authentication with JWT, an application form with eligibility declarations and a required-document checklist, and application status tracking.
+* **Administrative Control Center:** Add, edit, close, and reopen schemes; review application details; record review decisions; and search the approved beneficiary directory.
 * **Strict State Machine Workflow:** Enforces valid status transitions on the backend:
   $$\text{Submitted} \longrightarrow \text{Under Review} \longrightarrow \begin{cases} \text{Approved} \longrightarrow \text{Disbursed (Demo DBT Ref)} \\ \text{Rejected (with mandatory remarks)} \end{cases}$$
 * **Role-Based Isolation:** Beneficiaries can only access their own submissions; administrators have system-wide oversight.
@@ -29,7 +30,7 @@ The **Government Scheme Beneficiary Management System** is a full-stack civic we
 
 | Layer | Technology | Description |
 | :--- | :--- | :--- |
-| **Frontend** | React 19, Vite, Tailwind CSS, Lucide React, React Router 7 | Modern, accessible, responsive user interface with civic color styling |
+| **Frontend** | React 19, Vite, Tailwind CSS, React Router 7 | Simple, responsive user interface for citizens and administrators |
 | **Backend** | Node.js (v20+ / v26+), Express.js | REST API, role-based JWT middleware, centralized error handling |
 | **Database** | MongoDB with Mongoose ODM | Schema validation, compound indexing, audit history subdocuments |
 | **Security** | bcryptjs, jsonwebtoken | Password salting & hashing (10 rounds), tamper-proof JWT sessions |
@@ -145,7 +146,6 @@ The seed script initializes demo accounts with pre-populated records:
   * **Password:** `Citizen@12345`
   * *Sample applications: Mahila Micro-Enterprise Seed Capital (Approved)*
 
-*(One-click quick login buttons are also provided directly on the Login screen for testing convenience).*
 
 ---
 

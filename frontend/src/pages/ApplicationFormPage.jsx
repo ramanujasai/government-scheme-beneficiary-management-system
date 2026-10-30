@@ -1,20 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { schemeApi } from '../api/schemeApi';
 import { applicationApi } from '../api/applicationApi';
 import { useAuth } from '../context/AuthContext';
-import {
-  FileText,
-  CheckCircle2,
-  AlertCircle,
-  Send,
-  ArrowRight,
-  ArrowLeft
-} from 'lucide-react';
 
 export const ApplicationFormPage = () => {
   const { schemeId } = useParams();
-  const navigate = useNavigate();
   const { user } = useAuth();
 
   const [scheme, setScheme] = useState(null);
@@ -26,15 +17,15 @@ export const ApplicationFormPage = () => {
   const [applicantDetails, setApplicantDetails] = useState({
     fullName: user?.name || '',
     phone: user?.phone || '',
-    age: 32,
-    gender: 'Male',
+    age: '',
+    gender: 'Prefer not to say',
     address: user?.address || '',
-    state: user?.state || 'Telangana',
-    district: user?.district || 'Hyderabad',
+    state: user?.state || '',
+    district: user?.district || '',
     pincode: user?.pincode || '',
     socialCategory: user?.socialCategory || 'General',
-    annualIncome: 180000,
-    occupation: user?.occupation || 'Farmer'
+    annualIncome: '',
+    occupation: user?.occupation || ''
   });
 
   const [purposeOfAssistance, setPurposeOfAssistance] = useState('');
@@ -56,11 +47,11 @@ export const ApplicationFormPage = () => {
 
           const docs = (res.scheme.requiredDocuments || []).map((doc) => ({
             documentName: doc.documentName,
-            documentType: 'PDF/Document',
-            fileName: `${doc.documentName.toLowerCase().replace(/[^a-z0-9]/g, '_')}.pdf`,
-            fileSize: '500 KB',
+            documentType: 'Required',
+            fileName: 'Not uploaded - demo checklist',
+            fileSize: '',
             isMockUploaded: true,
-            uploadedAt: new Date().toISOString()
+            uploadedAt: null
           }));
           setDocumentsList(docs);
         } else {
@@ -80,7 +71,7 @@ export const ApplicationFormPage = () => {
     const { name, value } = e.target;
     setApplicantDetails((prev) => ({
       ...prev,
-      [name]: name === 'annualIncome' || name === 'age' ? Number(value) : value
+      [name]: (name === 'annualIncome' || name === 'age') && value !== '' ? Number(value) : value
     }));
   };
 
@@ -135,14 +126,28 @@ export const ApplicationFormPage = () => {
     );
   }
 
+  if (!scheme) {
+    return (
+      <main className="min-h-[90vh] bg-[#0e0e14] px-4 py-8 text-white">
+        <p role="alert" className="text-sm text-red-300">{error || 'Scheme not found.'}</p>
+        <Link to="/schemes" className="mt-4 inline-block text-sm text-blue-300 underline">Back to schemes</Link>
+      </main>
+    );
+  }
+
+  if (!scheme.isActive) {
+    return (
+      <main className="min-h-[90vh] bg-[#0e0e14] px-4 py-8 text-white">
+        <p className="text-sm">Applications are closed for {scheme.title}.</p>
+        <Link to={`/schemes/${schemeId}`} className="mt-4 inline-block text-sm text-blue-300 underline">Back to scheme details</Link>
+      </main>
+    );
+  }
+
   if (successApp) {
     return (
       <div className="min-h-screen bg-[#0e0e14] text-white py-12">
         <div className="max-w-lg mx-auto px-4 text-center bg-[#161622] p-8 rounded-xl border border-[#232336] shadow-xl">
-          <div className="w-12 h-12 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto mb-3">
-            <CheckCircle2 className="w-7 h-7" />
-          </div>
-
           <h2 className="text-xl font-bold text-white">
             Application Submitted
           </h2>
@@ -169,7 +174,7 @@ export const ApplicationFormPage = () => {
           <div className="flex gap-2">
             <Link
               to="/dashboard"
-              className="flex-1 py-2.5 px-4 rounded-lg bg-[#a855f7] hover:bg-[#9333ea] text-white font-semibold text-xs text-center transition"
+              className="flex-1 py-2.5 px-4 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold text-xs text-center transition"
             >
               Go to Dashboard
             </Link>
@@ -190,14 +195,13 @@ export const ApplicationFormPage = () => {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <Link
           to={`/schemes/${schemeId}`}
-          className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white mb-4 transition"
+          className="inline-block text-xs text-zinc-400 hover:text-white mb-4 transition"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Scheme Details</span>
+          Back to Scheme Details
         </Link>
 
         <div className="bg-[#161622] rounded-xl border border-[#232336] p-5 mb-5">
-          <span className="text-[11px] font-semibold bg-[#232336] text-purple-300 px-2 py-0.5 rounded">
+          <span className="text-[11px] font-semibold bg-[#232336] text-blue-300 px-2 py-0.5 rounded">
             {scheme?.category} &bull; {scheme?.code}
           </span>
           <h1 className="text-base font-bold text-white mt-2">
@@ -207,7 +211,6 @@ export const ApplicationFormPage = () => {
 
         {error && (
           <div className="mb-4 p-3 rounded-lg bg-[#2a1118] border border-rose-500/30 text-xs text-rose-300 flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
         )}
@@ -230,7 +233,7 @@ export const ApplicationFormPage = () => {
                   name="fullName"
                   value={applicantDetails.fullName}
                   onChange={handleApplicantChange}
-                  className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#a855f7]"
+                  className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#2563eb]"
                 />
               </div>
 
@@ -244,7 +247,7 @@ export const ApplicationFormPage = () => {
                   name="phone"
                   value={applicantDetails.phone}
                   onChange={handleApplicantChange}
-                  className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#a855f7]"
+                  className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#2563eb]"
                 />
               </div>
             </div>
@@ -262,7 +265,7 @@ export const ApplicationFormPage = () => {
                   name="age"
                   value={applicantDetails.age}
                   onChange={handleApplicantChange}
-                  className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#a855f7]"
+                  className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#2563eb]"
                 />
               </div>
 
@@ -275,11 +278,12 @@ export const ApplicationFormPage = () => {
                   value={applicantDetails.gender}
                   onChange={handleApplicantChange}
                   aria-label="Gender"
-                  className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#a855f7]"
+                  className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#2563eb]"
                 >
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
                 </select>
               </div>
 
@@ -293,7 +297,7 @@ export const ApplicationFormPage = () => {
                   name="annualIncome"
                   value={applicantDetails.annualIncome}
                   onChange={handleApplicantChange}
-                  className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#a855f7]"
+                  className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#2563eb]"
                 />
               </div>
             </div>
@@ -308,7 +312,7 @@ export const ApplicationFormPage = () => {
                 name="address"
                 value={applicantDetails.address}
                 onChange={handleApplicantChange}
-                className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#a855f7]"
+                className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#2563eb]"
               />
             </div>
 
@@ -323,7 +327,7 @@ export const ApplicationFormPage = () => {
                   name="district"
                   value={applicantDetails.district}
                   onChange={handleApplicantChange}
-                  className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#a855f7]"
+                  className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#2563eb]"
                 />
               </div>
 
@@ -337,7 +341,7 @@ export const ApplicationFormPage = () => {
                   name="state"
                   value={applicantDetails.state}
                   onChange={handleApplicantChange}
-                  className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#a855f7]"
+                  className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#2563eb]"
                 />
               </div>
 
@@ -351,7 +355,7 @@ export const ApplicationFormPage = () => {
                   name="pincode"
                   value={applicantDetails.pincode}
                   onChange={handleApplicantChange}
-                  className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#a855f7]"
+                  className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#2563eb]"
                 />
               </div>
             </div>
@@ -370,7 +374,7 @@ export const ApplicationFormPage = () => {
                     type="checkbox"
                     checked={!!criteriaChecked[idx]}
                     onChange={() => handleCriteriaToggle(idx)}
-                    className="w-4 h-4 text-[#a855f7] rounded border-[#2e2e42] mt-0.5 accent-[#a855f7]"
+                    className="w-4 h-4 text-[#2563eb] rounded border-[#2e2e42] mt-0.5 accent-[#2563eb]"
                   />
                   <span className="text-xs text-zinc-300 font-medium">{item.criterion}</span>
                 </label>
@@ -389,21 +393,22 @@ export const ApplicationFormPage = () => {
               value={purposeOfAssistance}
               onChange={(e) => setPurposeOfAssistance(e.target.value)}
               placeholder="State the purpose and intended use of assistance..."
-              className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#a855f7]"
+              className="w-full px-3 py-2 rounded-lg bg-[#12121a] border border-[#2e2e42] text-white text-xs focus:outline-none focus:border-[#2563eb]"
             />
           </div>
 
           {/* Section 4: Document List */}
           <div className="bg-[#161622] rounded-xl border border-[#232336] p-5">
             <h2 className="text-sm font-bold text-white mb-3 border-b border-[#232336] pb-2">
-              4. Attached Documents
+              4. Required Documents
             </h2>
+            <p className="mb-3 text-xs text-zinc-400">This demo records the required document list; it does not upload files.</p>
             <div className="space-y-2">
               {documentsList.map((doc, idx) => (
                 <div key={idx} className="p-2.5 rounded-lg border border-[#232336] bg-[#12121a] flex items-center justify-between text-xs">
                   <span className="font-medium text-zinc-300">{doc.documentName}</span>
-                  <span className="text-emerald-400 font-semibold bg-[#102919] border border-emerald-500/30 px-2 py-0.5 rounded text-[11px]">
-                    Attached
+                  <span className="text-zinc-400">
+                    Required
                   </span>
                 </div>
               ))}
@@ -418,7 +423,7 @@ export const ApplicationFormPage = () => {
                 required
                 checked={declarationAccepted}
                 onChange={(e) => setDeclarationAccepted(e.target.checked)}
-                className="w-4 h-4 text-[#a855f7] rounded border-[#2e2e42] mt-0.5 accent-[#a855f7]"
+                className="w-4 h-4 text-[#2563eb] rounded border-[#2e2e42] mt-0.5 accent-[#2563eb]"
               />
               <span className="text-xs text-zinc-300 font-medium">
                 I hereby certify that the information provided in this application is accurate and true to the best of my knowledge.
@@ -428,7 +433,7 @@ export const ApplicationFormPage = () => {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full mt-4 py-2.5 rounded-lg bg-[#a855f7] hover:bg-[#9333ea] text-white font-semibold text-xs transition"
+              className="w-full mt-4 py-2.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold text-xs transition"
             >
               {submitting ? 'Submitting...' : 'Submit Application'}
             </button>
