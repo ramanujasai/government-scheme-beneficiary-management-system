@@ -3,6 +3,11 @@
 > **Full Stack Academic Demonstration Project (FSD-2)**  
 > Built with **React 19 + Vite**, **Node.js + Express**, and **MongoDB + Mongoose**.
 
+## Live Demo
+
+**Frontend:** https://government-scheme-beneficiary-manag.vercel.app/
+
+
 ---
 
 ### Important Disclaimer
